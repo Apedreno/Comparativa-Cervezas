@@ -1,296 +1,569 @@
 <!DOCTYPE html>
 <html lang="es">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Comparador de Precios de Cerveza</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
-    .card-filter { background: #ffffff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,0.05); }
-    .price-liter { font-size: 1.1rem; font-weight: 700; color: #198754; }
-    .badge-super { font-size: 0.85rem; padding: 6px 10px; border-radius: 6px; }
-    .top-deal-card { border-left: 5px solid #198754; background: #f8fff9; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparador de Cervezas</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary: #d97706;
+            --primary-hover: #b45309;
+            --bg-main: #f8fafc;
+            --bg-card: #ffffff;
+            --text-main: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+            --success: #16a34a;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-main);
+            color: var(--text-main);
+            padding: 2rem;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border);
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+
+        h1 {
+            font-size: 1.8rem;
+            font-weight: 800;
+            color: #0f172a;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .vat-toggle {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            background: var(--bg-card);
+            padding: 0.5rem 1rem;
+            border-radius: 9999px;
+            border: 1px solid var(--border);
+            box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .switch {
+            position: relative;
+            display: inline-block;
+            width: 44px;
+            height: 24px;
+        }
+
+        .switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-color: #cbd5e1;
+            transition: .3s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 18px;
+            width: 18px;
+            left: 3px;
+            bottom: 3px;
+            background-color: white;
+            transition: .3s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(20px);
+        }
+
+        .main-layout {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: 2rem;
+        }
+
+        @media (max-width: 900px) {
+            .main-layout { grid-template-columns: 1fr; }
+        }
+
+        .filters-panel {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+            height: fit-content;
+        }
+
+        .filter-group {
+            margin-bottom: 1.5rem;
+        }
+
+        .filter-title {
+            font-size: 0.9rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            color: var(--text-muted);
+            margin-bottom: 0.75rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .btn-select-all {
+            background: none;
+            border: none;
+            color: var(--primary);
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .checkbox-list {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .checkbox-label {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.95rem;
+            cursor: pointer;
+        }
+
+        .btn-submit {
+            width: 100%;
+            background: var(--primary);
+            color: white;
+            border: none;
+            padding: 0.75rem;
+            border-radius: 0.5rem;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .btn-submit:hover {
+            background: var(--primary-hover);
+        }
+
+        .content-area {
+            display: flex;
+            flex-direction: column;
+            gap: 2rem;
+        }
+
+        .top-deals {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 1rem;
+        }
+
+        .deal-card {
+            background: var(--bg-card);
+            padding: 1.25rem;
+            border-radius: 0.75rem;
+            border: 1px solid var(--border);
+            border-top: 4px solid var(--success);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+        }
+
+        .deal-badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: var(--success);
+            text-transform: uppercase;
+        }
+
+        .deal-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            margin: 0.25rem 0;
+        }
+
+        .deal-price {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--success);
+        }
+
+        .chart-container {
+            background: var(--bg-card);
+            padding: 1.5rem;
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+            height: 300px;
+        }
+
+        .table-container {
+            background: var(--bg-card);
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+            overflow: hidden;
+            box-shadow: 0 4px 6px -1px rgba(0,0,0,0.05);
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            text-align: left;
+        }
+
+        th {
+            background: #f1f5f9;
+            padding: 1rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: var(--text-muted);
+            text-transform: uppercase;
+        }
+
+        td {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border);
+            font-size: 0.95rem;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .badge-super {
+            background: #e2e8f0;
+            padding: 0.25rem 0.5rem;
+            border-radius: 0.25rem;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .price-highlight {
+            font-weight: 700;
+            color: var(--success);
+        }
+    </style>
 </head>
-<body class="py-4">
-  <div class="container-fluid px-4">
-    <header class="pb-3 mb-4 border-bottom d-flex justify-content-between align-items-center flex-wrap gap-2">
-      <div class="d-flex align-items-center gap-3">
-        <i class="bi bi-beer display-6 text-warning"></i>
-        <div>
-          <h1 class="h3 mb-0 fw-bold">Comparador de Precios de Cerveza en España</h1>
-          <p class="text-muted mb-0 small">Analizador de coste por litro en supermercados y distribución (€/L)</p>
+<body>
+
+    <header>
+        <h1>🍺 Comparador de Cervezas</h1>
+        <div class="vat-toggle">
+            <span>Ver precios con IVA (21%)</span>
+            <label class="switch">
+                <input type="checkbox" id="vatToggle" checked>
+                <span class="slider"></span>
+            </label>
         </div>
-      </div>
-      <div class="form-check form-switch bg-white p-2 px-3 border rounded shadow-sm">
-        <input class="form-check-input" type="checkbox" id="vatToggle" checked>
-        <label class="form-check-label fw-semibold" for="vatToggle">Mostrar precios con 21% IVA</label>
-      </div>
     </header>
 
-    <div class="row g-4">
-      <!-- PANEL DE FILTROS -->
-      <div class="col-lg-3">
-        <div class="card card-filter p-3">
-          <h5 class="fw-bold mb-3"><i class="bi bi-funnel me-2"></i>Filtros de Búsqueda</h5>
-          
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Supermercados</label>
-            <div class="d-flex gap-2 mb-2">
-              <button class="btn btn-sm btn-outline-primary py-0" onclick="selectAll('storeCheck', true)">Todos</button>
-              <button class="btn btn-sm btn-outline-secondary py-0" onclick="selectAll('storeCheck', false)">Ninguno</button>
+    <div class="main-layout">
+        <!-- PANEL DE FILTROS -->
+        <aside class="filters-panel">
+            <div class="filter-group">
+                <div class="filter-title">
+                    <span>Supermercado</span>
+                    <button class="btn-select-all" onclick="toggleAll('storeCheck')">Todos</button>
+                </div>
+                <div class="checkbox-list" id="storeContainer"></div>
             </div>
-            <div id="storeContainer" class="d-flex flex-column gap-1"></div>
-          </div>
 
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Marcas de Cerveza</label>
-            <div class="d-flex gap-2 mb-2">
-              <button class="btn btn-sm btn-outline-primary py-0" onclick="selectAll('brandCheck', true)">Todas</button>
-              <button class="btn btn-sm btn-outline-secondary py-0" onclick="selectAll('brandCheck', false)">Ninguna</button>
+            <div class="filter-group">
+                <div class="filter-title">
+                    <span>Marca de cerveza</span>
+                    <button class="btn-select-all" onclick="toggleAll('brandCheck')">Todas</button>
+                </div>
+                <div class="checkbox-list" id="brandContainer"></div>
             </div>
-            <div id="brandContainer" class="d-flex flex-column gap-1" style="max-height: 200px; overflow-y: auto;"></div>
-          </div>
 
-          <div class="mb-3">
-            <label class="form-label fw-semibold">Tipo de Envase</label>
-            <div class="d-flex gap-2 mb-2">
-              <button class="btn btn-sm btn-outline-primary py-0" onclick="selectAll('formatCheck', true)">Todos</button>
-              <button class="btn btn-sm btn-outline-secondary py-0" onclick="selectAll('formatCheck', false)">Ninguno</button>
+            <div class="filter-group">
+                <div class="filter-title">
+                    <span>Envase</span>
+                    <button class="btn-select-all" onclick="toggleAll('formatCheck')">Todos</button>
+                </div>
+                <div class="checkbox-list" id="formatContainer"></div>
             </div>
-            <div id="formatContainer" class="d-flex flex-column gap-1"></div>
-          </div>
 
-          <button class="btn btn-success w-100 fw-bold mt-2 py-2" onclick="applyFilters()">
-            <i class="bi bi-search me-1"></i> Actualizar Comparativa
-          </button>
-        </div>
-      </div>
+            <button class="btn-submit" onclick="applyFilters()">Obtener Comparativa</button>
+        </aside>
 
-      <!-- RESULTADOS Y GRAFICA -->
-      <div class="col-lg-9">
-        <div id="topDeals" class="row g-3 mb-4"></div>
+        <!-- AREA DE CONTENIDO Y RESULTADOS -->
+        <main class="content-area">
+            <div class="top-deals" id="topDeals"></div>
 
-        <div class="card card-filter p-3 mb-4">
-          <h5 class="fw-bold mb-3"><i class="bi bi-bar-chart-fill me-2 text-primary"></i>Comparativa de Precio Medio por Litro (€/L)</h5>
-          <div style="height: 250px;"><canvas id="priceChart"></canvas></div>
-        </div>
+            <div class="chart-container">
+                <canvas id="priceChart"></canvas>
+            </div>
 
-        <div class="card card-filter p-3">
-          <div class="d-flex justify-content-between align-items-center mb-3 flex-wrap gap-2">
-            <h5 class="fw-bold mb-0"><i class="bi bi-table me-2"></i>Resultados Detallados</h5>
-            <span id="resultCount" class="badge bg-secondary">0 resultados</span>
-          </div>
-
-          <div class="table-responsive">
-            <table class="table table-hover align-middle">
-              <thead class="table-dark">
-                <tr>
-                  <th>Supermercado</th>
-                  <th>Marca</th>
-                  <th>Formato</th>
-                  <th>Precio Neto</th>
-                  <th>Precio Final</th>
-                  <th>Precio / Litro (€/L)</th>
-                </tr>
-              </thead>
-              <tbody id="tableBody"></tbody>
-            </table>
-          </div>
-        </div>
-      </div>
+            <div class="table-container">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Supermercado</th>
+                            <th>Marca</th>
+                            <th>Formato</th>
+                            <th>Precio Neto</th>
+                            <th>Precio Total</th>
+                            <th>Precio / Litro (€/L)</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody"></tbody>
+                </table>
+            </div>
+        </main>
     </div>
-  </div>
 
-  <script>
-    // =========================================================================
-    // BASE DE DATOS DE PRECIOS BASE (SIN IVA - BASE IMPONIBLE)
-    // Para actualizar o añadir productos, edita directamente este array:
-    // =========================================================================
-    const beerDatabase = [
-      // ESTRELLA DE LEVANTE
-      { brand: 'Estrella de Levante', store: 'Mercadona', format: 'Lata (33 cl)', priceNet: 0.58, volume: 0.33 },
-      { brand: 'Estrella de Levante', store: 'Mercadona', format: 'Quinto (25 cl)', priceNet: 0.50, volume: 0.25 },
-      { brand: 'Estrella de Levante', store: 'Mercadona', format: 'Tercio (33 cl)', priceNet: 0.64, volume: 0.33 },
-      { brand: 'Estrella de Levante', store: 'Makro', format: 'Lata (33 cl)', priceNet: 0.57, volume: 0.33 },
-      { brand: 'Estrella de Levante', store: 'Makro', format: 'Quinto (25 cl)', priceNet: 0.43, volume: 0.25 },
-      { brand: 'Estrella de Levante', store: 'Makro', format: 'Tercio (33 cl)', priceNet: 0.59, volume: 0.33 },
-      { brand: 'Estrella de Levante', store: 'Makro', format: 'Litro (1 L)', priceNet: 1.20, volume: 1.00 },
-      { brand: 'Estrella de Levante', store: 'Alcampo', format: 'Lata (33 cl)', priceNet: 0.58, volume: 0.33 },
-      { brand: 'Estrella de Levante', store: 'Alcampo', format: 'Quinto (25 cl)', priceNet: 0.49, volume: 0.25 },
-      { brand: 'Estrella de Levante', store: 'Alcampo', format: 'Tercio (33 cl)', priceNet: 0.63, volume: 0.33 },
-      { brand: 'Estrella de Levante', store: 'Alcampo', format: 'Litro (1 L)', priceNet: 1.30, volume: 1.00 },
+    <script>
+        // =========================================================================
+        // BASE DE DATOS DE PRECIOS BASE (SIN IVA - ACTUALIZADA)
+        // =========================================================================
+        const beerDatabase = [
+            // ESTRELLA DE LEVANTE
+            { brand: 'Estrella de Levante', store: 'Mercadona', format: 'Lata (33 cl)', priceNet: 0.58, volume: 0.33 },
+            { brand: 'Estrella de Levante', store: 'Mercadona', format: 'Quinto (25 cl)', priceNet: 0.50, volume: 0.25 },
+            { brand: 'Estrella de Levante', store: 'Mercadona', format: 'Tercio (33 cl)', priceNet: 0.64, volume: 0.33 },
+            { brand: 'Estrella de Levante', store: 'Makro', format: 'Lata (33 cl)', priceNet: 0.57, volume: 0.33 },
+            { brand: 'Estrella de Levante', store: 'Makro', format: 'Quinto (25 cl)', priceNet: 0.43, volume: 0.25 },
+            { brand: 'Estrella de Levante', store: 'Makro', format: 'Tercio (33 cl)', priceNet: 0.59, volume: 0.33 },
+            { brand: 'Estrella de Levante', store: 'Makro', format: 'Litro (1 L)', priceNet: 1.20, volume: 1.00 },
+            { brand: 'Estrella de Levante', store: 'Alcampo', format: 'Lata (33 cl)', priceNet: 0.58, volume: 0.33 },
+            { brand: 'Estrella de Levante', store: 'Alcampo', format: 'Quinto (25 cl)', priceNet: 0.49, volume: 0.25 },
+            { brand: 'Estrella de Levante', store: 'Alcampo', format: 'Tercio (33 cl)', priceNet: 0.63, volume: 0.33 },
+            { brand: 'Estrella de Levante', store: 'Alcampo', format: 'Litro (1 L)', priceNet: 1.30, volume: 1.00 },
+            { brand: 'Estrella de Levante', store: 'SuperDumbo', format: 'Lata (33 cl)', priceNet: 0.57, volume: 0.33 },
+            { brand: 'Estrella de Levante', store: 'SuperDumbo', format: 'Tercio (33 cl)', priceNet: 0.62, volume: 0.33 },
+            { brand: 'Estrella de Levante', store: 'Consum', format: 'Lata (33 cl)', priceNet: 0.59, volume: 0.33 },
+            { brand: 'Estrella de Levante', store: 'Carrefour', format: 'Lata (33 cl)', priceNet: 0.59, volume: 0.33 },
 
-      // MAHOU ESPECIAL
-      { brand: 'Mahou Especial', store: 'Mercadona', format: 'Lata (33 cl)', priceNet: 0.65, volume: 0.33 },
-      { brand: 'Mahou Especial', store: 'Mercadona', format: 'Tercio (33 cl)', priceNet: 0.72, volume: 0.33 },
-      { brand: 'Mahou Especial', store: 'Alcampo', format: 'Lata (33 cl)', priceNet: 0.63, volume: 0.33 },
-      { brand: 'Mahou Especial', store: 'Makro', format: 'Lata (33 cl)', priceNet: 0.59, volume: 0.33 },
-      { brand: 'Mahou Especial', store: 'Makro', format: 'Tercio (33 cl)', priceNet: 0.66, volume: 0.33 },
-      { brand: 'Mahou Especial', store: 'Carrefour', format: 'Lata (33 cl)', priceNet: 0.64, volume: 0.33 },
+            // MAHOU ESPECIAL
+            { brand: 'Mahou Especial', store: 'Mercadona', format: 'Lata (33 cl)', priceNet: 0.65, volume: 0.33 },
+            { brand: 'Mahou Especial', store: 'Mercadona', format: 'Tercio (33 cl)', priceNet: 0.72, volume: 0.33 },
+            { brand: 'Mahou Especial', store: 'Alcampo', format: 'Lata (33 cl)', priceNet: 0.63, volume: 0.33 },
+            { brand: 'Mahou Especial', store: 'Alcampo', format: 'Litro (1 L)', priceNet: 1.35, volume: 1.00 },
+            { brand: 'Mahou Especial', store: 'Makro', format: 'Lata (33 cl)', priceNet: 0.59, volume: 0.33 },
+            { brand: 'Mahou Especial', store: 'Makro', format: 'Tercio (33 cl)', priceNet: 0.66, volume: 0.33 },
+            { brand: 'Mahou Especial', store: 'Carrefour', format: 'Lata (33 cl)', priceNet: 0.64, volume: 0.33 },
+            { brand: 'Mahou Especial', store: 'Consum', format: 'Lata (33 cl)', priceNet: 0.65, volume: 0.33 },
 
-      // ESTRELLA GALICIA
-      { brand: 'Estrella Galicia', store: 'Mercadona', format: 'Lata (33 cl)', priceNet: 0.70, volume: 0.33 },
-      { brand: 'Estrella Galicia', store: 'Mercadona', format: 'Tercio (33 cl)', priceNet: 0.81, volume: 0.33 },
-      { brand: 'Estrella Galicia', store: 'Alcampo', format: 'Lata (33 cl)', priceNet: 0.68, volume: 0.33 },
-      { brand: 'Estrella Galicia', store: 'SuperDumbo', format: 'Lata (33 cl)', priceNet: 0.67, volume: 0.33 },
-      { brand: 'Estrella Galicia', store: 'Makro', format: 'Tercio (33 cl)', priceNet: 0.74, volume: 0.33 },
+            // ESTRELLA GALICIA
+            { brand: 'Estrella Galicia', store: 'Mercadona', format: 'Lata (33 cl)', priceNet: 0.70, volume: 0.33 },
+            { brand: 'Estrella Galicia', store: 'Mercadona', format: 'Tercio (33 cl)', priceNet: 0.81, volume: 0.33 },
+            { brand: 'Estrella Galicia', store: 'Alcampo', format: 'Lata (33 cl)', priceNet: 0.68, volume: 0.33 },
+            { brand: 'Estrella Galicia', store: 'Alcampo', format: 'Litro (1 L)', priceNet: 1.45, volume: 1.00 },
+            { brand: 'Estrella Galicia', store: 'SuperDumbo', format: 'Lata (33 cl)', priceNet: 0.67, volume: 0.33 },
+            { brand: 'Estrella Galicia', store: 'Makro', format: 'Tercio (33 cl)', priceNet: 0.74, volume: 0.33 },
+            { brand: 'Estrella Galicia', store: 'Carrefour', format: 'Lata (33 cl)', priceNet: 0.69, volume: 0.33 },
 
-      // ALHAMBRA 1925
-      { brand: 'Alhambra 1925', store: 'Mercadona', format: 'Tercio (33 cl)', priceNet: 1.05, volume: 0.33 },
-      { brand: 'Alhambra 1925', store: 'Alcampo', format: 'Tercio (33 cl)', priceNet: 0.99, volume: 0.33 },
-      { brand: 'Alhambra 1925', store: 'Makro', format: 'Tercio (33 cl)', priceNet: 0.92, volume: 0.33 },
+            // ALHAMBRA 1925
+            { brand: 'Alhambra 1925', store: 'Mercadona', format: 'Tercio (33 cl)', priceNet: 1.05, volume: 0.33 },
+            { brand: 'Alhambra 1925', store: 'Alcampo', format: 'Tercio (33 cl)', priceNet: 0.99, volume: 0.33 },
+            { brand: 'Alhambra 1925', store: 'Makro', format: 'Tercio (33 cl)', priceNet: 0.92, volume: 0.33 },
+            { brand: 'Alhambra 1925', store: 'Consum', format: 'Tercio (33 cl)', priceNet: 1.02, volume: 0.33 },
 
-      // PAULANER
-      { brand: 'Paulaner', store: 'Alcampo', format: 'Litro (1 L)', priceNet: 2.10, volume: 0.50 },
-      { brand: 'Paulaner', store: 'Carrefour', format: 'Tercio (33 cl)', priceNet: 1.15, volume: 0.33 },
-      { brand: 'Paulaner', store: 'Lidl', format: 'Lata (33 cl)', priceNet: 0.95, volume: 0.50 }
-    ];
+            // ALHAMBRA TRADICIONAL
+            { brand: 'Alhambra Tradicional', store: 'Mercadona', format: 'Lata (33 cl)', priceNet: 0.56, volume: 0.33 },
+            { brand: 'Alhambra Tradicional', store: 'Alcampo', format: 'Lata (33 cl)', priceNet: 0.54, volume: 0.33 },
+            { brand: 'Alhambra Tradicional', store: 'Makro', format: 'Lata (33 cl)', priceNet: 0.51, volume: 0.33 },
 
-    const stores = ['Mercadona', 'Makro', 'Alcampo', 'Carrefour', 'Consum', 'Aldi', 'SuperDumbo', 'Lidl'];
-    const brands = ['Estrella de Levante', 'Mahou Especial', 'Estrella Galicia', 'San Miguel', 'Alhambra Tradicional', 'Alhambra 1925', 'Paulaner', 'Amstel', 'Heineken', 'Estrella Damm', 'Cruzcampo'];
-    const formats = ['Lata (33 cl)', 'Quinto (25 cl)', 'Tercio (33 cl)', 'Litro (1 L)'];
+            // SAN MIGUEL
+            { brand: 'San Miguel', store: 'Mercadona', format: 'Lata (33 cl)', priceNet: 0.54, volume: 0.33 },
+            { brand: 'San Miguel', store: 'Alcampo', format: 'Lata (33 cl)', priceNet: 0.52, volume: 0.33 },
+            { brand: 'San Miguel', store: 'Carrefour', format: 'Lata (33 cl)', priceNet: 0.53, volume: 0.33 },
+            { brand: 'San Miguel', store: 'Makro', format: 'Lata (33 cl)', priceNet: 0.49, volume: 0.33 },
 
-    let chartInstance = null;
+            // PAULANER
+            { brand: 'Paulaner', store: 'Alcampo', format: 'Litro (1 L)', priceNet: 2.10, volume: 0.50 },
+            { brand: 'Paulaner', store: 'Carrefour', format: 'Tercio (33 cl)', priceNet: 1.15, volume: 0.33 },
+            { brand: 'Paulaner', store: 'Lidl', format: 'Lata (33 cl)', priceNet: 0.95, volume: 0.50 },
+            { brand: 'Paulaner', store: 'Aldi', format: 'Lata (33 cl)', priceNet: 0.98, volume: 0.50 },
 
-    function renderCheckboxes(containerId, items, className) {
-      const container = document.getElementById(containerId);
-      container.innerHTML = items.map(item => `
-        <div class="form-check">
-          <input class="form-check-input ${className}" type="checkbox" value="${item}" id="${containerId}_${item}" checked>
-          <label class="form-check-label small" for="${containerId}_${item}">${item}</label>
-        </div>
-      `).join('');
-    }
+            // AMSTEL
+            { brand: 'Amstel', store: 'Mercadona', format: 'Lata (33 cl)', priceNet: 0.56, volume: 0.33 },
+            { brand: 'Amstel', store: 'Alcampo', format: 'Lata (33 cl)', priceNet: 0.53, volume: 0.33 },
+            { brand: 'Amstel', store: 'Makro', format: 'Lata (33 cl)', priceNet: 0.50, volume: 0.33 },
+            { brand: 'Amstel', store: 'Consum', format: 'Lata (33 cl)', priceNet: 0.55, volume: 0.33 },
 
-    function selectAll(className, value) {
-      document.querySelectorAll('.' + className).forEach(cb => cb.checked = value);
-      applyFilters();
-    }
+            // HEINEKEN
+            { brand: 'Heineken', store: 'Mercadona', format: 'Lata (33 cl)', priceNet: 0.72, volume: 0.33 },
+            { brand: 'Heineken', store: 'Alcampo', format: 'Lata (33 cl)', priceNet: 0.69, volume: 0.33 },
+            { brand: 'Heineken', store: 'Makro', format: 'Lata (33 cl)', priceNet: 0.65, volume: 0.33 },
+            { brand: 'Heineken', store: 'Carrefour', format: 'Lata (33 cl)', priceNet: 0.70, volume: 0.33 },
 
-    function getSelectedValues(className) {
-      return Array.from(document.querySelectorAll('.' + className + ':checked')).map(cb => cb.value);
-    }
+            // CRUZCAMPO
+            { brand: 'Cruzcampo', store: 'Mercadona', format: 'Lata (33 cl)', priceNet: 0.58, volume: 0.33 },
+            { brand: 'Cruzcampo', store: 'Alcampo', format: 'Lata (33 cl)', priceNet: 0.55, volume: 0.33 },
+            { brand: 'Cruzcampo', store: 'Makro', format: 'Lata (33 cl)', priceNet: 0.52, volume: 0.33 }
+        ];
 
-    function applyFilters() {
-      const selectedStores = getSelectedValues('storeCheck');
-      const selectedBrands = getSelectedValues('brandCheck');
-      const selectedFormats = getSelectedValues('formatCheck');
-      const showVat = document.getElementById('vatToggle').checked;
+        const stores = ['Mercadona', 'Makro', 'Alcampo', 'Carrefour', 'Consum', 'Aldi', 'SuperDumbo', 'Lidl'];
+        const brands = ['Estrella de Levante', 'Mahou Especial', 'Estrella Galicia', 'San Miguel', 'Alhambra Tradicional', 'Alhambra 1925', 'Paulaner', 'Amstel', 'Heineken', 'Estrella Damm', 'Cruzcampo'];
+        const formats = ['Lata (33 cl)', 'Quinto (25 cl)', 'Tercio (33 cl)', 'Litro (1 L)'];
 
-      const filtered = beerDatabase.filter(item => 
-        selectedStores.includes(item.store) &&
-        selectedBrands.includes(item.brand) &&
-        selectedFormats.includes(item.format)
-      );
+        let chartInstance = null;
 
-      renderTable(filtered, showVat);
-      renderTopDeals(filtered, showVat);
-      renderChart(filtered, showVat);
-    }
-
-    function renderTable(data, showVat) {
-      const tableBody = document.getElementById('tableBody');
-      document.getElementById('resultCount').textContent = `${data.length} resultados`;
-
-      if (data.length === 0) {
-        tableBody.innerHTML = `<tr><td colspan="6" class="text-center py-4 text-muted">No se encontraron productos con los filtros seleccionados</td></tr>`;
-        return;
-      }
-
-      // Ordenar por precio de litro (€/L) de menor a mayor
-      data.sort((a, b) => (a.priceNet / a.volume) - (b.priceNet / b.volume));
-
-      tableBody.innerHTML = data.map(item => {
-        const vatFactor = showVat ? 1.21 : 1.0;
-        const finalPrice = item.priceNet * vatFactor;
-        const pricePerLiter = finalPrice / item.volume;
-
-        return `
-          <tr>
-            <td><span class="badge bg-dark badge-super">${item.store}</span></td>
-            <td class="fw-bold">${item.brand}</td>
-            <td>${item.format}</td>
-            <td>${item.priceNet.toFixed(2)} €</td>
-            <td class="fw-semibold">${finalPrice.toFixed(2)} €</td>
-            <td class="price-liter">${pricePerLiter.toFixed(2)} €/L</td>
-          </tr>
-        `;
-      }).join('');
-    }
-
-    function renderTopDeals(data, showVat) {
-      const topContainer = document.getElementById('topDeals');
-      if (data.length === 0) { topContainer.innerHTML = ''; return; }
-
-      const sorted = [...data].sort((a, b) => (a.priceNet / a.volume) - (b.priceNet / b.volume)).slice(0, 3);
-      
-      topContainer.innerHTML = sorted.map((item, idx) => {
-        const finalPrice = item.priceNet * (showVat ? 1.21 : 1.0);
-        const pricePerLiter = finalPrice / item.volume;
-
-        return `
-          <div class="col-md-4">
-            <div class="card p-3 top-deal-card shadow-sm">
-              <div class="d-flex justify-content-between">
-                <span class="badge bg-success">Top #${idx + 1} Más Barato</span>
-                <small class="text-muted">${item.store}</small>
-              </div>
-              <h6 class="fw-bold mt-2 mb-1">${item.brand}</h6>
-              <p class="text-muted small mb-1">${item.format}</p>
-              <div class="d-flex justify-content-between align-items-end mt-2">
-                <div><span class="fs-4 fw-bold text-success">${pricePerLiter.toFixed(2)} €</span> <span class="small text-muted">/Litro</span></div>
-                <small class="text-secondary">${finalPrice.toFixed(2)} €/ud</small>
-              </div>
-            </div>
-          </div>
-        `;
-      }).join('');
-    }
-
-    function renderChart(data, showVat) {
-      const ctx = document.getElementById('priceChart').getContext('2d');
-      const formatAvg = {};
-
-      formats.forEach(f => {
-        const items = data.filter(d => d.format === f);
-        if (items.length > 0) {
-          const sum = items.reduce((acc, curr) => acc + ((curr.priceNet * (showVat ? 1.21 : 1.0)) / curr.volume), 0);
-          formatAvg[f] = sum / items.length;
+        function renderCheckboxes(containerId, items, className) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = items.map(item => `
+                <label class="checkbox-label">
+                    <input type="checkbox" class="${className}" value="${item}" checked>
+                    <span>${item}</span>
+                </label>
+            `).join('');
         }
-      });
 
-      if (chartInstance) chartInstance.destroy();
-
-      chartInstance = new Chart(ctx, {
-        type: 'bar',
-        data: {
-          labels: Object.keys(formatAvg),
-          datasets: [{
-            label: 'Precio Medio por Litro (€/L)',
-            data: Object.values(formatAvg),
-            backgroundColor: '#198754'
-          }]
-        },
-        options: {
-          responsive: true,
-          maintainAspectRatio: false,
-          scales: { y: { beginAtZero: true } }
+        function toggleAll(className) {
+            const checkboxes = document.querySelectorAll('.' + className);
+            const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+            checkboxes.forEach(cb => cb.checked = !allChecked);
+            applyFilters();
         }
-      });
-    }
 
-    document.addEventListener('DOMContentLoaded', () => {
-      renderCheckboxes('storeContainer', stores, 'storeCheck');
-      renderCheckboxes('brandContainer', brands, 'brandCheck');
-      renderCheckboxes('formatContainer', formats, 'formatCheck');
+        function getSelectedValues(className) {
+            return Array.from(document.querySelectorAll('.' + className + ':checked')).map(cb => cb.value);
+        }
 
-      document.getElementById('vatToggle').addEventListener('change', applyFilters);
-      applyFilters();
-    });
-  </script>
+        function applyFilters() {
+            const selectedStores = getSelectedValues('storeCheck');
+            const selectedBrands = getSelectedValues('brandCheck');
+            const selectedFormats = getSelectedValues('formatCheck');
+            const showVat = document.getElementById('vatToggle').checked;
+
+            const filtered = beerDatabase.filter(item => 
+                selectedStores.includes(item.store) &&
+                selectedBrands.includes(item.brand) &&
+                selectedFormats.includes(item.format)
+            );
+
+            renderTable(filtered, showVat);
+            renderTopDeals(filtered, showVat);
+            renderChart(filtered, showVat);
+        }
+
+        function renderTable(data, showVat) {
+            const tableBody = document.getElementById('tableBody');
+            data.sort((a, b) => (a.priceNet / a.volume) - (b.priceNet / b.volume));
+
+            if (data.length === 0) {
+                tableBody.innerHTML = `<tr><td colspan="6" style="text-align: center; color: var(--text-muted);">No se encontraron datos</td></tr>`;
+                return;
+            }
+
+            tableBody.innerHTML = data.map(item => {
+                const vatFactor = showVat ? 1.21 : 1.0;
+                const finalPrice = item.priceNet * vatFactor;
+                const pricePerLiter = finalPrice / item.volume;
+
+                return `
+                    <tr>
+                        <td><span class="badge-super">${item.store}</span></td>
+                        <td><strong>${item.brand}</strong></td>
+                        <td>${item.format}</td>
+                        <td>${item.priceNet.toFixed(2)} €</td>
+                        <td><strong>${finalPrice.toFixed(2)} €</strong></td>
+                        <td class="price-highlight">${pricePerLiter.toFixed(2)} €/L</td>
+                    </tr>
+                `;
+            }).join('');
+        }
+
+        function renderTopDeals(data, showVat) {
+            const topContainer = document.getElementById('topDeals');
+            if (data.length === 0) { topContainer.innerHTML = ''; return; }
+
+            const sorted = [...data].sort((a, b) => (a.priceNet / a.volume) - (b.priceNet / b.volume)).slice(0, 3);
+
+            topContainer.innerHTML = sorted.map((item, idx) => {
+                const finalPrice = item.priceNet * (showVat ? 1.21 : 1.0);
+                const pricePerLiter = finalPrice / item.volume;
+
+                return `
+                    <div class="deal-card">
+                        <div class="deal-badge">Opción #${idx + 1} Más Económica</div>
+                        <div class="deal-title">${item.brand}</div>
+                        <div style="font-size: 0.85rem; color: var(--text-muted);">${item.store} · ${item.format}</div>
+                        <div class="deal-price" style="margin-top: 0.5rem;">${pricePerLiter.toFixed(2)} €<span style="font-size: 0.8rem; font-weight: normal;"> /L</span></div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function renderChart(data, showVat) {
+            const ctx = document.getElementById('priceChart').getContext('2d');
+            const formatAvg = {};
+
+            formats.forEach(f => {
+                const items = data.filter(d => d.format === f);
+                if (items.length > 0) {
+                    const sum = items.reduce((acc, curr) => acc + ((curr.priceNet * (showVat ? 1.21 : 1.0)) / curr.volume), 0);
+                    formatAvg[f] = sum / items.length;
+                }
+            });
+
+            if (chartInstance) chartInstance.destroy();
+
+            chartInstance = new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: Object.keys(formatAvg),
+                    datasets: [{
+                        label: 'Precio Medio por Litro (€/L)',
+                        data: Object.values(formatAvg),
+                        backgroundColor: '#d97706',
+                        borderRadius: 6
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { display: false } },
+                    scales: { y: { beginAtZero: true } }
+                }
+            });
+        }
+
+        document.addEventListener('DOMContentLoaded', () => {
+            renderCheckboxes('storeContainer', stores, 'storeCheck');
+            renderCheckboxes('brandContainer', brands, 'brandCheck');
+            renderCheckboxes('formatContainer', formats, 'formatCheck');
+
+            document.getElementById('vatToggle').addEventListener('change', applyFilters);
+            applyFilters();
+        });
+    </script>
 </body>
 </html>
